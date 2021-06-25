@@ -1,12 +1,13 @@
-import {FormEvent, useEffect, useState} from "react";
-import {useParams} from 'react-router-dom';
+import { FormEvent, useEffect, useState } from "react";
+import { useParams } from 'react-router-dom';
 
 import logoImg from '../assets/images/logo.svg';
 
-import {Button} from "../components/Button";
-import {RoomCode} from "../components/RoomCode";
-import {useAuth} from "../hooks/useAuth";
-import {database} from "../services/firebase";
+import { Button } from "../components/Button";
+import { Question } from "../components/Question";
+import { RoomCode } from "../components/RoomCode";
+import { useAuth } from "../hooks/useAuth";
+import { database } from "../services/firebase";
 
 import '../styles/room.scss'
 
@@ -20,7 +21,7 @@ type FireBaseQuestions = Record<string, {
     isAnswered: string;
 }>
 
-type Question = {
+type QuestionType = {
     id: string;
     author: {
         name: string;
@@ -36,10 +37,10 @@ type RoomParams = {
 }
 
 export function Room() {
-    const {user} = useAuth();
+    const { user } = useAuth();
     const params = useParams<RoomParams>();
     const [newQuestion, setNewQuestion] = useState('');
-    const [questions, setQuestions] = useState<Question[]>([]);
+    const [questions, setQuestions] = useState<QuestionType[]>([]);
     const [title, setTitle] = useState('')
 
     const roomId = params.id;
@@ -50,7 +51,7 @@ export function Room() {
         roomRef.on('value', room => {
             const databaseRoom = room.val();
             const firebaseQuestions: FireBaseQuestions = databaseRoom.questions ?? {};
-            const parsedQuenstions = Object.entries(firebaseQuestions ?? {}).map(([key, value]) => {
+            const parsedQuestions = Object.entries(firebaseQuestions ?? {}).map(([key, value]) => {
                 return {
                     id: key,
                     content: value.content,
@@ -60,7 +61,7 @@ export function Room() {
                 }
             });
             setTitle(databaseRoom.title);
-            setQuestions(parsedQuenstions);
+            setQuestions(parsedQuestions);
         })
     }, [roomId]);
 
@@ -93,8 +94,8 @@ export function Room() {
         <div id="page-room">
             <header>
                 <div className="content">
-                    <img src={logoImg} alt="Letmeask"/>
-                    <RoomCode code={roomId}/>
+                    <img src={logoImg} alt="Letmeask" />
+                    <RoomCode code={roomId} />
                 </div>
             </header>
 
@@ -105,16 +106,16 @@ export function Room() {
                 </div>
 
                 <form onSubmit={handleSendQuestion}>
-                  <textarea
-                      placeholder="O que você quer perguntar?"
-                      onChange={event => setNewQuestion(event.target.value)}
-                      value={newQuestion}
-                  />
+                    <textarea
+                        placeholder="O que você quer perguntar?"
+                        onChange={event => setNewQuestion(event.target.value)}
+                        value={newQuestion}
+                    />
 
                     <div className="form-footer">
                         {user ? (
                             <div className="user-info">
-                                <img src={user.avatar} alt={user.name}/>
+                                <img src={user.avatar} alt={user.name} />
                                 <span>{user.name}</span>
                             </div>
                         ) : (
@@ -124,7 +125,17 @@ export function Room() {
                     </div>
                 </form>
 
-                {JSON.stringify(questions)}
+                <div className="question-list">
+                    {questions.map(question => {
+                        return (
+                            <Question
+                                key={question.id}
+                                content={question.content}
+                                author={question.author}
+                            />
+                        );
+                    })}
+                </div>
             </main>
         </div>
     );
